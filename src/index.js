@@ -2,23 +2,58 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
-class Square extends React.Component {
-  render() {
+// This is an example of a functional component because it only consists of a render method.
+function Square(props) {
     return (
-      <button className="square">
-        {/* TODO */}
+      <button className="square" onClick={() => props.onClick()}>
+        {props.value}
       </button>
     );
   }
-}
+
+/* 
+Square no longer keeps its own state; it receives its value from its parent Board and 
+informs its parent when it’s clicked. We call components like this controlled components.
+*/
 
 class Board extends React.Component {
+  constructor(props) { // Sets the initial state of the board to have an array of 9 null values.
+    super(props);
+    this.state = {
+      squares: Array(9).fill(null),
+      xIsNext: true,
+    };
+  }
+
+  handleClick(i) {
+    const squares = this.state.squares.slice();
+    if (calculateWinner(squares) || squares[i]) {
+      return; // Ignore the click if someone has already won the game or if a square is already filled.
+    }
+    squares[i] = this.state.xIsNext ? 'X' : 'O'; // X & O take turns.
+    this.setState({
+      squares: squares,
+      xIsNext: !this.state.xIsNext,
+    });
+  }
+
   renderSquare(i) {
-    return <Square />;
+    return (
+      <Square 
+        value={this.state.squares[i]} // value = prop
+        onClick={() => this.handleClick(i)} // onClick = prop
+      />
+    )
   }
 
   render() {
-    const status = 'Next player: X';
+    const winner = calculateWinner(this.state.squares);
+    let status;
+    if (winner) {
+      status = 'WINNER: ' + winner;
+    } else {
+      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    }
 
     return (
       <div>
@@ -57,6 +92,26 @@ class Game extends React.Component {
       </div>
     );
   }
+}
+
+function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+  return null;
 }
 
 // ========================================
